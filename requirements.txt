@@ -7,3 +7,5 @@ openai
 python-dotenv
 httpx
 azure-cosmos
+streamlit
+pandas
