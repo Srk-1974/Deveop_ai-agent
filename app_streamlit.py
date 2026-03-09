@@ -140,8 +140,3 @@ with tab3:
 if st.checkbox("Auto-refresh data (5s)"):
     time.sleep(5)
     st.rerun()
-
-# Polling for updates
-if st.checkbox("Auto-refresh data (5s)"):
-    time.sleep(5)
-    st.rerun()
