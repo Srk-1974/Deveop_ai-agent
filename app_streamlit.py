@@ -32,11 +32,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # API Configuration
-API_URL = "http://127.0.0.1:8000"
+st.sidebar.subheader("🌐 Connection Settings")
+api_base_url = st.sidebar.text_input("Backend API URL", value="http://127.0.0.1:8000", help="Change this if your backend is running on a different machine or in the cloud.")
+API_URL = api_base_url.strip("/")
 
 def get_status():
     try:
-        response = requests.get(f"{API_URL}/api/status", timeout=2)
+        response = requests.get(f"{API_URL}/api/status", timeout=3)
         if response.status_code == 200:
             return response.json()
     except:
