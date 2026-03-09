@@ -62,84 +62,84 @@ with st.sidebar:
         st.success("Backend: Online")
     else:
         st.error("Backend: Offline")
-        st.info("Start the server using: `python -m uvicorn src.main:app --reload`")
+        st.info("💡 **Connection Required**: Ensure your FastAPI backend is running.")
 
     st.divider()
     st.subheader("Manual Actions")
     if st.button("🚀 Test All Webhooks"):
-        with st.spinner("Firing webhooks..."):
-            # Trigger simulations via requests
-            requests.post(f"{API_URL}/webhook/pr", json={
-                "resource": {"pullRequestId": 100, "repository": {"id": "repo"}, "title": "Security Fix", "description": "Fixing auth"},
-                "resourceContainers": {"project": {"id": "project"}}
-            })
-            requests.post(f"{API_URL}/webhook/build", json={
-                "resource": {"id": 200, "result": "failed"},
-                "resourceContainers": {"project": {"id": "project"}}
-            })
-            st.toast("Tests triggered successfully!")
+        if not server_status:
+            st.error("Cannot test: Backend is offline!")
+        else:
+            with st.spinner("Firing webhooks..."):
+                # Trigger simulations via requests
+                trigger_test("pr", {"resource": {"pullRequestId": 100, "repository": {"id": "repo"}, "title": "Security Fix", "description": "Fixing auth"}, "resourceContainers": {"project": {"id": "project"}}})
+                trigger_test("build", {"resource": {"id": 200, "result": "failed"}, "resourceContainers": {"project": {"id": "project"}}})
+                st.toast("Tests triggered successfully!")
 
 # Main Dashboard
 st.title("Azure AI DevOps Agent Console")
 st.caption("AI-powered orchestration for Pull Requests, Pipelines, and Incident Triage.")
 
-if server_status:
-    # Stats row
-    activities = server_status.get("activity", [])
-    pr_count = len([a for a in activities if "PR_REVIEWED" in a["type"]])
-    build_count = len([a for a in activities if "BUILD_DIAGNOSED" in a["type"]])
-    wi_count = len([a for a in activities if "WORKITEM_TRIAGED" in a["type"]])
-    deploy_count = len([a for a in activities if "DEPLOYMENT_VALIDATED" in a["type"]])
+if not server_status:
+    with st.expander("🛠️ Connection Guide (System Offline)", expanded=True):
+        st.markdown("""
+        The Management Console needs to connect to your AI DevOps Backend to show live data.
+        1.  **Start the Backend**: Run `python -m uvicorn src.main:app --reload`
+        2.  **Verify URL**: Ensure the 'Backend API URL' in the sidebar matches your server.
+        3.  **Check Firewall**: Ensure port 8000 is open if testing remotely.
+        """)
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("PRs Reviewed", pr_count)
-    col2.metric("Builds Diagnosed", build_count)
-    col3.metric("Incidents Triaged", wi_count)
-    col4.metric("Release Validations", deploy_count)
+# Data processing
+activities = server_status.get("activity", []) if server_status else []
+pr_count = len([a for a in activities if "PR_REVIEWED" in a["type"]])
+build_count = len([a for a in activities if "BUILD_DIAGNOSED" in a["type"]])
+wi_count = len([a for a in activities if "WORKITEM_TRIAGED" in a["type"]])
+deploy_count = len([a for a in activities if "DEPLOYMENT_VALIDATED" in a["type"]])
 
-    st.divider()
+# Stats row
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("PRs Reviewed", pr_count)
+col2.metric("Builds Diagnosed", build_count)
+col3.metric("Incidents Triaged", wi_count)
+col4.metric("Release Validations", deploy_count)
 
-    # Tabs
-    tab1, tab2, tab3 = st.tabs(["🕒 Activity Log", "📈 Analytics", "⚙️ Configuration"])
+st.divider()
 
-    with tab1:
-        st.subheader("Real-time Activity")
-        if activities:
-            df = pd.DataFrame(activities).iloc[::-1] # Reverse for latest first
-            for _, row in df.iterrows():
-                with st.expander(f"{row['type']} - {row['timestamp']}"):
-                    st.write(f"**Message:** {row['message']}")
-                    st.write(f"**Status:** {row['status'].upper()}")
-        else:
-            st.info("No activity recorded yet. Trigger some webhooks to see data!")
+# Tabs
+tab1, tab2, tab3 = st.tabs(["🕒 Activity Log", "📈 Analytics", "⚙️ Configuration"])
 
-    with tab2:
-        st.subheader("AI Performance")
-        st.info("Detailed analytics on AI accuracy and response times coming soon.")
-        # Placeholder chart
-        chart_data = pd.DataFrame({
-            "Day": ["Mon", "Tue", "Wed", "Thu", "Fri"],
-            "Tasks": [12, 18, 15, 25, 20]
-        })
-        st.line_chart(chart_data.set_index("Day"))
+with tab1:
+    st.subheader("Real-time Activity")
+    if activities:
+        df = pd.DataFrame(activities).iloc[::-1] # Reverse for latest first
+        for _, row in df.iterrows():
+            with st.expander(f"{row['type']} - {row['timestamp']}"):
+                st.write(f"**Message:** {row['message']}")
+                st.write(f"**Status:** {row['status'].upper()}")
+    else:
+        st.info("No activity recorded yet or backend disconnected.")
 
-    with tab3:
-        st.subheader("Agent Configuration")
-        st.json({
-            "model": "gpt-4o",
-            "temperature": 0.2,
-            "max_tokens": 4096,
-            "connected_services": ["PR Reviewer", "Build Monitor", "Work Item Triager", "Deployment Guard"]
-        })
+with tab2:
+    st.subheader("AI Performance")
+    # Placeholder chart
+    chart_data = pd.DataFrame({
+        "Day": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        "Tasks": [12, 18, 15, 25, 20]
+    })
+    st.line_chart(chart_data.set_index("Day"))
 
-else:
-    st.info("💡 **Connection Required**: The Management Console needs to connect to your AI DevOps Backend to show live data.")
-    st.markdown("""
-    ### 🛠️ How to connect:
-    1.  **Start the Backend**: Run `python -m uvicorn src.main:app --reload` in your terminal.
-    2.  **Verify URL**: Ensure the 'Backend API URL' in the sidebar matches your server address.
-    3.  **Check Firewall**: If running on a different system, ensure port 8000 is open.
-    """)
+with tab3:
+    st.subheader("Agent Configuration")
+    st.json({
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "connected_services": ["PR Reviewer", "Build Monitor", "Work Item Triager", "Deployment Guard"]
+    })
+
+# Polling for updates
+if st.checkbox("Auto-refresh data (5s)"):
+    time.sleep(5)
+    st.rerun()
 
 # Polling for updates
 if st.checkbox("Auto-refresh data (5s)"):
