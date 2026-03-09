@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure AI DevOps Agent | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0078d4;
+            --accent: #00c2ff;
+            --bg: #0b1120;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(217,100%,10%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,100%,15%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(217,100%,10%,1) 0, transparent 50%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 120, 112, 0.4);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        main {
+            flex: 1;
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        .hero {
+            grid-column: 1 / -1;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.125rem;
+            max-width: 600px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .feed-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feed-item {
+            display: flex;
+            gap: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .feed-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feed-content {
+            flex: 1;
+        }
+
+        .feed-type {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
+            color: var(--primary);
+        }
+
+        .feed-msg {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .feed-time {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: filter 0.3s ease;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        footer {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.1 12"/><path d="M12 12L12 22"/><path d="M12 12L21.9 12"/><path d="M12 12L12 2"/><path d="M12 12l8.5 8.5"/><path d="M12 12l-8.5 8.5"/><path d="M12 12L3.5 3.5"/><path d="M12 12l8.5-8.5"/></svg>
+            </div>
+            Azure AI DevOps
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Agent Live
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>Intelligent DevOps Orchestration</h1>
+            <p>Your autonomous agent is monitoring pipelines and reviewing code with Azure OpenAI GPT-4o.</p>
+        </div>
+
+        <section class="card">
+            <h2 style="margin-bottom: 2rem;">Activity Log</h2>
+            <div id="activity-feed" class="feed-container">
+                <!-- Activity items will be injected here -->
+                <div class="feed-item">
+                    <div class="feed-icon"><svg width="20" height="20" fill="var(--primary)" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.45l8.15 14.1H3.85L12 5.45zM11 11v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg></div>
+                    <div class="feed-content">
+                        <div class="feed-type">System</div>
+                        <div class="feed-msg">Agent initialized and listening for webhooks...</div>
+                        <div class="feed-time">Initialization complete</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="stats-grid">
+            <div class="card stat-card">
+                <div class="stat-value" id="pr-count">0</div>
+                <div class="stat-label">PRs Reviewed</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-value" id="build-count">0</div>
+                <div class="stat-label">Builds Diagnosed</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-value" id="wi-count">0</div>
+                <div class="stat-label">Work Items Triaged</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-value" id="deploy-count">0</div>
+                <div class="stat-label">Deployments Validated</div>
+            </div>
+            <div class="card" style="margin-top: auto;">
+                <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="btn">Test Webhook</button>
+                    <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">View Logs</button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer>
+        &copy; 2026 Azure AI DevOps Agent. Powered by Azure AI Foundry.
+    </footer>
+
+    <script>
+        // Simulation/Polling logic
+        const feed = document.getElementById('activity-feed');
+        const prCountEl = document.getElementById('pr-count');
+        const buildCountEl = document.getElementById('build-count');
+        const wiCountEl = document.getElementById('wi-count');
+        const deployCountEl = document.getElementById('deploy-count');
+        let prCount = 0;
+        let buildCount = 0;
+        let wiCount = 0;
+        let deployCount = 0;
+
+        async function updateDashboard() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                if (data.activity && data.activity.length > 0) {
+                    // Update feed
+                    renderFeed(data.activity);
+                    
+                    // Update stats (simulated for this example)
+                    prCount = data.activity.filter(a => a.type.includes('PR_REVIEWED')).length;
+                    buildCount = data.activity.filter(a => a.type.includes('BUILD_DIAGNOSED')).length;
+                    wiCount = data.activity.filter(a => a.type.includes('WORKITEM_TRIAGED')).length;
+                    deployCount = data.activity.filter(a => a.type.includes('DEPLOYMENT_VALIDATED')).length;
+                    
+                    prCountEl.innerText = prCount;
+                    buildCountEl.innerText = buildCount;
+                    wiCountEl.innerText = wiCount;
+                    deployCountEl.innerText = deployCount;
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function renderFeed(activities) {
+            // Only keep last 10 to keep DOM clean
+            const latest = activities.slice(-10).reverse();
+            feed.innerHTML = '';
+            
+            latest.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'feed-item';
+                div.innerHTML = `
+                    <div class="feed-icon" style="background: ${getStatusColor(item.status)}10">
+                        ${getIcon(item.type)}
+                    </div>
+                    <div class="feed-content">
+                        <div class="feed-type" style="color: ${getStatusColor(item.status)}">${item.type}</div>
+                        <div class="feed-msg">${item.message}</div>
+                        <div class="feed-time">${item.timestamp}</div>
+                    </div>
+                `;
+                feed.appendChild(div);
+            });
+        }
+
+        function getStatusColor(status) {
+            if (status === 'success') return '#10b981';
+            if (status === 'warning') return '#f59e0b';
+            if (status === 'error') return '#ef4444';
+            return '#0078d4';
+        }
+
+        function getIcon(type) {
+            if (type.includes('PR')) return '<svg width="20" height="20" fill="#0078d4" viewBox="0 0 24 24"><path d="M15 18c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-9-8c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0 6c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>';
+            if (type.includes('BUILD')) return '<svg width="20" height="20" fill="#f59e0b" viewBox="0 0 24 24"><path d="M22 21H2V3h20v18zM4 19h16V5H4v14z"/></svg>';
+            if (type.includes('WORKITEM')) return '<svg width="20" height="20" fill="#10b981" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>';
+            if (type.includes('DEPLOYMENT')) return '<svg width="20" height="20" fill="#00c2ff" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';
+            return '<svg width="20" height="20" fill="#94a3b8" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>';
+        }
+
+        setInterval(updateDashboard, 5000);
+    </script>
+</body>
+</html>
