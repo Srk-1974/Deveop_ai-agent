@@ -133,8 +133,13 @@ if server_status:
         })
 
 else:
-    st.warning("Please connect the FastAPI backend to view real-time metrics.")
-    st.image("https://via.placeholder.com/800x400/0b1120/f8fafc?text=Console+Offline+-+Start+FastAPI+Server", use_container_width=True)
+    st.info("💡 **Connection Required**: The Management Console needs to connect to your AI DevOps Backend to show live data.")
+    st.markdown("""
+    ### 🛠️ How to connect:
+    1.  **Start the Backend**: Run `python -m uvicorn src.main:app --reload` in your terminal.
+    2.  **Verify URL**: Ensure the 'Backend API URL' in the sidebar matches your server address.
+    3.  **Check Firewall**: If running on a different system, ensure port 8000 is open.
+    """)
 
 # Polling for updates
 if st.checkbox("Auto-refresh data (5s)"):
